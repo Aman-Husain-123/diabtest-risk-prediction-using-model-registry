@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diabetes Risk Predictor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f0c29 0%, #1a1a3e 40%, #24243e 100%);
+            color: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 720px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header .icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #6c63ff, #48c6ef);
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 8px 32px rgba(108, 99, 255, 0.35);
+        }
+
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: -0.025em;
+        }
+
+        .header p {
+            font-size: 0.875rem;
+            color: #8b8fa3;
+            margin-top: 0.5rem;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(108, 99, 255, 0.15);
+            border: 1px solid rgba(108, 99, 255, 0.3);
+            color: #a29bfe;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            margin-top: 0.75rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        /* Card */
+        .card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 2rem;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .form-group label {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .form-group input {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 0.7rem 0.9rem;
+            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+            color: #fff;
+            transition: all 0.25s ease;
+            outline: none;
+        }
+
+        .form-group input::placeholder {
+            color: #4a4e69;
+        }
+
+        .form-group input:focus {
+            border-color: #6c63ff;
+            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.15);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .form-group .hint {
+            font-size: 0.65rem;
+            color: #5a5e73;
+            margin-top: 0.1rem;
+        }
+
+        /* Button */
+        .btn-wrapper {
+            margin-top: 1.75rem;
+        }
+
+        .btn-predict {
+            width: 100%;
+            padding: 0.85rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            color: #fff;
+            background: linear-gradient(135deg, #6c63ff 0%, #48c6ef 100%);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 0.02em;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-predict::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, #5a52e0 0%, #3ab0d9 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .btn-predict:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(108, 99, 255, 0.4);
+        }
+
+        .btn-predict:hover::before {
+            opacity: 1;
+        }
+
+        .btn-predict:active {
+            transform: translateY(0);
+        }
+
+        .btn-predict span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .btn-predict.loading span {
+            opacity: 0;
+        }
+
+        .btn-predict .spinner {
+            display: none;
+            position: absolute;
+            inset: 0;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+        }
+
+        .btn-predict.loading .spinner {
+            display: flex;
+        }
+
+        .spinner-dot {
+            width: 8px;
+            height: 8px;
+            background: #fff;
+            border-radius: 50%;
+            margin: 0 3px;
+            animation: bounce 0.6s ease-in-out infinite alternate;
+        }
+
+        .spinner-dot:nth-child(2) { animation-delay: 0.15s; }
+        .spinner-dot:nth-child(3) { animation-delay: 0.3s; }
+
+        @keyframes bounce {
+            to { transform: translateY(-6px); opacity: 0.6; }
+        }
+
+        /* Result */
+        .result {
+            margin-top: 1.5rem;
+            border-radius: 14px;
+            padding: 1.5rem;
+            text-align: center;
+            display: none;
+            animation: slideUp 0.4s ease;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .result.positive {
+            background: rgba(255, 82, 82, 0.1);
+            border: 1px solid rgba(255, 82, 82, 0.25);
+        }
+
+        .result.negative {
+            background: rgba(0, 230, 118, 0.08);
+            border: 1px solid rgba(0, 230, 118, 0.2);
+        }
+
+        .result.error {
+            background: rgba(255, 171, 0, 0.1);
+            border: 1px solid rgba(255, 171, 0, 0.25);
+        }
+
+        .result-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-label {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .result.positive .result-label { color: #ff5252; }
+        .result.negative .result-label { color: #00e676; }
+        .result.error .result-label { color: #ffab00; }
+
+        .result-note {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.7rem;
+            color: #3d3f50;
+        }
+
+        .footer a {
+            color: #6c63ff;
+            text-decoration: none;
+        }
+
+        @media (max-width: 520px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="icon">🩺</div>
+            <h1>Diabetes Risk Predictor</h1>
+            <p>Powered by MLflow Model Registry &bull; RandomForest Classifier</p>
+            <div class="badge">Model v3 &middot; Production</div>
+        </div>
+
+        <div class="card">
+            <form id="predictionForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="pregnancies">Pregnancies</label>
+                        <input type="number" id="pregnancies" name="pregnancies" placeholder="e.g. 1" min="0" max="20" required>
+                        <span class="hint">Number of pregnancies</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="glucose">Glucose</label>
+                        <input type="number" id="glucose" name="glucose" placeholder="e.g. 85" min="0" max="300" required>
+                        <span class="hint">Plasma glucose concentration</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="blood_pressure">Blood Pressure</label>
+                        <input type="number" id="blood_pressure" name="blood_pressure" placeholder="e.g. 66" min="0" max="200" required>
+                        <span class="hint">Diastolic BP (mm Hg)</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="skin_thickness">Skin Thickness</label>
+                        <input type="number" id="skin_thickness" name="skin_thickness" placeholder="e.g. 29" min="0" max="100" required>
+                        <span class="hint">Triceps fold thickness (mm)</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="insulin">Insulin</label>
+                        <input type="number" id="insulin" name="insulin" placeholder="e.g. 0" min="0" max="900" required>
+                        <span class="hint">2-Hour serum insulin (mu U/ml)</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="bmi">BMI</label>
+                        <input type="number" id="bmi" name="bmi" placeholder="e.g. 26.6" step="0.1" min="0" max="80" required>
+                        <span class="hint">Body mass index (kg/m²)</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="dpf">Diabetes Pedigree</label>
+                        <input type="number" id="dpf" name="dpf" placeholder="e.g. 0.351" step="0.001" min="0" max="3" required>
+                        <span class="hint">Diabetes pedigree function</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="age">Age</label>
+                        <input type="number" id="age" name="age" placeholder="e.g. 31" min="1" max="120" required>
+                        <span class="hint">Age in years</span>
+                    </div>
+                </div>
+
+                <div class="btn-wrapper">
+                    <button type="submit" class="btn-predict" id="predictBtn">
+                        <span>Run Prediction</span>
+                        <div class="spinner">
+                            <div class="spinner-dot"></div>
+                            <div class="spinner-dot"></div>
+                            <div class="spinner-dot"></div>
+                        </div>
+                    </button>
+                </div>
+            </form>
+
+            <div class="result" id="result">
+                <div class="result-icon" id="resultIcon"></div>
+                <div class="result-label" id="resultLabel"></div>
+                <div class="result-note" id="resultNote"></div>
+            </div>
+        </div>
+
+        <div class="footer">
+            Pima Indians Diabetes Dataset &bull; Model served via <a href="http://127.0.0.1:5000" target="_blank">MLflow</a>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('predictionForm');
+        const btn = document.getElementById('predictBtn');
+        const result = document.getElementById('result');
+        const resultIcon = document.getElementById('resultIcon');
+        const resultLabel = document.getElementById('resultLabel');
+        const resultNote = document.getElementById('resultNote');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Collect form data
+            const payload = {
+                pregnancies: document.getElementById('pregnancies').value,
+                glucose: document.getElementById('glucose').value,
+                blood_pressure: document.getElementById('blood_pressure').value,
+                skin_thickness: document.getElementById('skin_thickness').value,
+                insulin: document.getElementById('insulin').value,
+                bmi: document.getElementById('bmi').value,
+                dpf: document.getElementById('dpf').value,
+                age: document.getElementById('age').value,
+            };
+
+            // Loading state
+            btn.classList.add('loading');
+            btn.disabled = true;
+            result.classList.remove('show', 'positive', 'negative', 'error');
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                // Show result
+                if (data.prediction === 1) {
+                    result.classList.add('positive');
+                    resultIcon.textContent = '⚠️';
+                    resultLabel.textContent = 'Diabetic — Positive Risk Detected';
+                } else {
+                    result.classList.add('negative');
+                    resultIcon.textContent = '✅';
+                    resultLabel.textContent = 'Not Diabetic — No Risk Detected';
+                }
+
+                resultNote.textContent = data.confidence_note;
+                result.classList.add('show');
+
+            } catch (err) {
+                result.classList.add('error');
+                resultIcon.textContent = '❌';
+                resultLabel.textContent = 'Prediction Failed';
+                resultNote.textContent = err.message;
+                result.classList.add('show');
+            } finally {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
